@@ -20,8 +20,8 @@
         <v-app>
             <v-container>
                 <v-card>
-                    <v-card-title class="bg-blue">{{title}}</v-card-title>
-                    <v-card-text class="pa-6">
+                    <v-card-title class="title d-flex justify-center bg-black">{{title}}</v-card-title>
+                    <v-card-text class="pa-6 d-flex justify-center">
                         <v-card-actions>
                             <template v-if="user">
                                 <div class="pa-2">
@@ -33,8 +33,10 @@
                                 </div>
                                 <!-- <div>{{user}}</div> -->
                             </template>
-                            <v-btn @click="google_login()" v-if="!user" class="bg-blue-500 text-white hover:bg-blue-600"> Login</v-btn>
-                            <v-btn @click="google_logout()" v-if="user" class="bg-red-500 text-white hover:bg-red-600"> Logout</v-btn>
+                            <v-btn @click="google_login()" v-if="!user"
+                                class="bg-blue-500 text-white hover:bg-blue-600">Login</v-btn>
+                            <v-btn @click="google_logout()" v-if="user"
+                                class="bg-red-500 text-white hover:bg-red-600">Logout</v-btn>
                         </v-card-actions>
                     </v-card-text>
                 </v-card>
@@ -65,10 +67,9 @@
                 return {
                     title: "STD Checker",
                     students: [],
-                    editstd: {},
-                    editmode: 0,
+                    teacher: [],
                     user: null,
-                    ustudent: null
+                    ustudent: null,
                 };
             },
             mounted() {
@@ -79,6 +80,24 @@
                         this.user = null;
                     }
                 });
+                db.collection("students")
+                    .get()
+                    .then((querySnapshot) => {
+                        var stdlist = [];
+                        querySnapshot.forEach((doc) => {
+                            stdlist.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.students = stdlist;
+                    });
+                db.collection("teacher")
+                    .get()
+                    .then((querySnapshot) => {
+                        var teacherlist = [];
+                        querySnapshot.forEach((doc) => {
+                            teacherlist.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.teacher = teacherlist;
+                    });
             },
             methods: {
                 google_login() {
@@ -86,15 +105,25 @@
                     var provider = new firebase.auth.GoogleAuthProvider();
                     provider.addScope("profile");
                     provider.addScope("email");
-                    firebase.auth().signInWithPopup(provider);
+                    firebase.auth().signInWithPopup(provider)
+                        .then(() => {
+                            this.checkUserRole();
+                        });
                 },
                 google_logout() {
                     if (confirm("Are you sure?")) {
                         firebase.auth().signOut();
                     }
                 },
+                checkUserRole(email) {
+                    if (email === "kingnapa.s@kkumail.com") {
+                        window.location.href = 'teacher.html';
+                    } else {
+                        window.location.href = 'student.html';
+                    }
+                },
                 getstudent(email) {
-                    db.collection("Students")
+                    db.collection("students")
                         .where("email", "==", email)
                         .limit(1)
                         .get()
