@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
         <v-app>
             <v-container>
                 <v-card>
-                    <v-card-title class="bg-blue-grey">{{title}}</v-card-title>
+                    <v-card-title class="title d-flex justify-center bg-black">{{title}}</v-card-title>
                     <v-card-text class="pa-6">
                         <v-card-actions>
                             <template v-if="user">
@@ -32,68 +33,31 @@
                                 </div>
                                 <!-- <div>{{user}}</div> -->
                             </template>
-                            <v-btn @click="google_login()" v-if="!user" class="bg-green-400 text-white hover:bg-green-600"> Login</v-btn>
-                            <v-btn @click="google_logout()" v-if="user" class="bg-red-500 text-white hover:bg-red-600"> Logout</v-btn>
-                        </v-card-actions>
-                        <table width="100%">
-                            <thead>
-                                <tr>
-                                    <td>รหัส</td>
-                                    <td>คำนำหน้า</td>
-                                    <td>ชื่อ</td>
-                                    <td>สกุล</td>
-                                    <td>Email</td>
-                                    <td>โทรศัพท์</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(s) in Students">
-                                    <td>{{s.id}}</td>
-                                    <td>{{s.title}}</td>
-                                    <td>{{s.fname}}</td>
-                                    <td>{{s.lname}}</td>
-                                    <td>{{s.email}}</td>
-                                    <td>{{s.phone}}</td>
-                                    <td>
-                                        <v-btn @click="edit(s)"
-                                            class="bg-yellow-500 text-white hover:bg-yellow-600">EDIT</v-btn>
-                                        <v-btn @click="deleteData(s)"
-                                            class="bg-red-500 text-white hover:bg-red-600">DEL</v-btn>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </v-card-text>
+                            <v-btn @click="google_login()" v-if="!user"
+                                class="bg-green-400 text-white hover:bg-green-600"> Login</v-btn>
+                            <v-btn @click="google_logout()" v-if="user" class="bg-red-500 text-white hover:bg-red-600">
+                                Logout</v-btn>
 
-                    <v-card-actions>
-                        <v-btn @click="readData()" class="bg-green-500 text-white hover:bg-green-600">Read Data(get)</v-btn>
-                        <v-btn @click="autoRead()" class="bg-blue-500 text-white hover:bg-blue-600">Auto Read(onSnapshot)</v-btn>
-                        <v-btn @click="addData()" class="bg-yellow-500 text-white hover:bg-yellow-600">Add Data</v-btn>
-                    </v-card-actions>
                 </v-card>
-                <v-card v-if="editmode">
-                    <v-card-text class="pa-6">
-                        <v-card-title class="bg-blue-grey">{{editmode}}</v-card-title>
-                        <v-text-field v-model="editstd.id" label="รหัส"></v-text-field>
-                        <v-combobox v-model="editstd.title" label="คำนำหน้า" :items="['นาย','นางสาว','ด.ช.','ด.ญ','นาง']"></v-combobox>
-                        <v-text-field v-model="editstd.fname" label="ชื่อ"></v-text-field>
-                        <v-text-field v-model="editstd.lname" label="นามสกุล"></v-text-field>
-                        <v-text-field v-model="editstd.email" label="E-mail"></v-text-field>
-                        <v-text-field v-model="editstd.phone" label="โทรศัพท์"></v-text-field>
+                <v-card>
+                    <v-card-title class="title d-flex justify-center">{{p}}</v-card-title>
+                    <v-card-text>
+                        <v-text-field v-model="checkInCode" label="รหัส"></v-text-field>
+                        <v-text-field v-model="checkInCode" type="datetime-local" label="เวลา"></v-text-field>
+                        <v-text-field v-model="checkInCode" label="ห้อง"></v-text-field>
+                        <v-text-field v-model="checkInCode" label="วิชา"></v-text-field>
+
+                        <v-btn @click="markAttendance" class="bg-blue-500 text-white">Checkin</v-btn>
                     </v-card-text>
-                    <v-card-actions>
-                        <v-btn @click="savedata()">Save</v-btn>
-                        <v-btn @click="editmode=0">Cancel</v-btn>
-                    </v-card-actions>
                 </v-card>
-                <div class="pa-6 text-center">{{footer}}</div>
+
             </v-container>
         </v-app>
     </div>
 
 
     <script>
-          const firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyA5-DOioROzlk-VGiyYFZJZhSWOs6MqOZ4",
             authDomain: "std-checker-7ba2c.firebaseapp.com",
             projectId: "std-checker-7ba2c",
@@ -111,7 +75,9 @@
             data() {
                 return {
                     title: "Student",
+                    p:"เช็คชื่อ",
                     students: [],
+                    teacher: [],
                     editstd: {},
                     editmode: 0,
                     user: null,
@@ -126,19 +92,27 @@
                         this.user = null;
                     }
                 });
-            },
-            methods: {
-                readData() {
-                    db.collection("students")
-                        .get()
-                        .then((querySnapshot) => {
-                            var stdlist = [];
-                            querySnapshot.forEach((doc) => {
-                                stdlist.push({ id: doc.id, ...doc.data() });
-                            });
-                            this.students = stdlist;
+                db.collection("students")
+                    .get()
+                    .then((querySnapshot) => {
+                        var stdlist = [];
+                        querySnapshot.forEach((doc) => {
+                            stdlist.push({ id: doc.id, ...doc.data() });
                         });
-                },
+                        this.students = stdlist;
+                    });
+                db.collection("teacher")
+                    .get()
+                    .then((querySnapshot) => {
+                        var teacherlist = [];
+                        querySnapshot.forEach((doc) => {
+                            teacherlist.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.teacher = teacherlist;
+                    });
+            },
+
+            methods: {
                 autoRead() {
                     db.collection("students").onSnapshot((querySnapshot) => {
                         var stdlist = [];
@@ -152,18 +126,14 @@
                     this.editstd = std;
                     this.editmode = "edit";
                 },
-                savedata() {
-                    db.collection("students").doc(this.editstd.id).set(this.editstd);
-                },
-                deleteData(std) {
-                    if (confirm("ต้องการลบข้อมูล")) {
-                        db.collection("students").doc(std.id).delete();
-                    }
-                },
                 addData() {
                     this.editmode = "เพิ่มนักเรียน";
                     this.editstd = {};
                 },
+                markAttendance(){
+                this.editmode = "ข้อมูลการเช็คชื่อ";
+                this.editcheckin={};
+            },
                 google_login() {
                     // Using a popup.
                     var provider = new firebase.auth.GoogleAuthProvider();
@@ -174,6 +144,7 @@
                 google_logout() {
                     if (confirm("Are you sure?")) {
                         firebase.auth().signOut();
+                        window.location.href = 'index.html';
                     }
                 },
                 getstudent(email) {

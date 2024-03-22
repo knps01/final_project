@@ -1,11 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher</title>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body>
-    <h1>Teacher</h1>
+    <div id="app">
+        <v-app>
+            <v-container>
+                <v-card>
+                    <v-card-title class="title d-flex justify-center bg-black">{{title}}</v-card-title>
+                    <v-card-text class="pa-6">
+                        <v-card-actions>
+                            <template v-if="user">
+                                <div class="pa-2">
+                                    <v-avatar><img :src="user.photoURL" /></v-avatar>
+                                </div>
+                                <div class="pa-2">
+                                    {{user.displayName}}<br />
+                                    {{user.email}}<br />
+                                </div>
+                                <!-- <div>{{user}}</div> -->
+                            </template>
+                            <v-btn @click="google_login()" v-if="!user"
+                                class="bg-green-400 text-white hover:bg-green-600"> Login</v-btn>
+                            <v-btn @click="google_logout()" v-if="user" class="bg-red-500 text-white hover:bg-red-600">
+                                Logout</v-btn>
+
+                </v-card>
+            </v-container>
+        </v-app>
+    </div>
+
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5-DOioROzlk-VGiyYFZJZhSWOs6MqOZ4",
+            authDomain: "std-checker-7ba2c.firebaseapp.com",
+            projectId: "std-checker-7ba2c",
+            storageBucket: "std-checker-7ba2c.appspot.com",
+            messagingSenderId: "484525243109",
+            appId: "1:484525243109:web:20bb92e9b34db14463b20c",
+            measurementId: "G-6R0X4WEPE7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const vuetify = Vuetify.createVuetify();
+        const app = Vue.createApp({
+            data() {
+                return {
+                    title: "Teacher",
+                  nameChecks: [], // List of name checks
+                    selectedNameCheck: null, // Currently selected name check
+                    questionText: "", // Text for new question
+                    questions: [], // List of questions
+                    user: null // User information
+                };
+            },
+            mounted() {
+                firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        this.user = user.toJSON();
+                    } else {
+                        this.user = null;
+                    }
+                });
+                db.collection("students")
+                    .get()
+                    .then((querySnapshot) => {
+                        var stdlist = [];
+                        querySnapshot.forEach((doc) => {
+                            stdlist.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.students = stdlist;
+                    });
+                db.collection("teacher")
+                    .get()
+                    .then((querySnapshot) => {
+                        var teacherlist = [];
+                        querySnapshot.forEach((doc) => {
+                            teacherlist.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.teacher = teacherlist;
+                    });
+            },
+
+            methods: {
+                autoRead() {
+                    db.collection("students").onSnapshot((querySnapshot) => {
+                        var stdlist = [];
+                        querySnapshot.forEach((doc) => {
+                            stdlist.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.students = stdlist;
+                    });
+                },
+                edit(std) {
+                    this.editstd = std;
+                    this.editmode = "edit";
+                },
+                addData() {
+                    this.editmode = "เพิ่มนักเรียน";
+                    this.editstd = {};
+                },
+                markAttendance(){
+                this.editmode = "ข้อมูลการเช็คชื่อ";
+                this.editcheckin={};
+            },
+                google_login() {
+                    // Using a popup.
+                    var provider = new firebase.auth.GoogleAuthProvider();
+                    provider.addScope("profile");
+                    provider.addScope("email");
+                    firebase.auth().signInWithPopup(provider);
+                },
+                google_logout() {
+                    if (confirm("Are you sure?")) {
+                        firebase.auth().signOut();
+                        window.location.href = 'index.html';
+                    }
+                },
+                getstudent(email) {
+                    db.collection("students")
+                        .where("email", "==", email)
+                        .limit(1)
+                        .get()
+                        .then(
+                            (querySnapshot) => {
+                                querySnapshot.forEach((doc) => {
+                                    this.ustudent = { id: doc.id, ...doc.data() };
+                                });
+                            }
+                        );
+                },
+
+            },
+        });
+        app.use(vuetify).mount("#app");
+
+    </script>
+
 </body>
+
 </html>
