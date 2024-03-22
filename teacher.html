@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>Login</h1>
+        <div v-if="errorMessage" style="color: red;">{{ errorMessage }}</div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" v-model="email" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" v-model="password" required>
+        </div>
+        <div>
+            <input type="radio" id="teacher" value="teacher" v-model="userType">
+            <label for="teacher">Teacher (Admin)</label>
+            <input type="radio" id="student" value="student" v-model="userType">
+            <label for="student">Student</label>
+        </div>
+        <button @click="login">Login</button>
+        <hr>
+        <button @click="loginWithGoogle">Login with Google</button>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                email: '',
+                password: '',
+                userType: 'teacher',
+                errorMessage: ''
+            },
+            methods: {
+                login() {
+                    // You can implement your login logic here
+                    if (this.userType === 'teacher') {
+                        // Teacher login logic
+                    } else {
+                        // Student login logic
+                    }
+                },
+                loginWithGoogle() {
+                    // Implement Google OAuth logic here
+                    // Redirect to Google OAuth page or use Google OAuth API
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
