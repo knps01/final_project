@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documents</title>
+    <title>STD Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.css" rel="stylesheet" />
@@ -19,7 +20,7 @@
         <v-app>
             <v-container>
                 <v-card>
-                    <v-card-title class="bg-blue-grey">{{title}}</v-card-title>
+                    <v-card-title class="bg-blue">{{title}}</v-card-title>
                     <v-card-text class="pa-6">
                         <v-card-actions>
                             <template v-if="user">
@@ -32,72 +33,38 @@
                                 </div>
                                 <!-- <div>{{user}}</div> -->
                             </template>
-                            <v-btn @click="google_login()" v-if="!user" class="bg-green-400 text-white hover:bg-green-600"> Login</v-btn>
+                            <v-btn @click="google_login()" v-if="!user" class="bg-blue-500 text-white hover:bg-blue-600"> Login</v-btn>
                             <v-btn @click="google_logout()" v-if="user" class="bg-red-500 text-white hover:bg-red-600"> Logout</v-btn>
                         </v-card-actions>
-                        <table width="100%">
-                            <thead>
-                                <tr>
-                                    <td>รหัส</td>
-                                    <td>คำนำหน้า</td>
-                                    <td>ชื่อ</td>
-                                    <td>สกุล</td>
-                                    <td>Email</td>
-                                    <td>โทรศัพท์</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(s) in Students">
-                                    <td>{{s.id}}</td>
-                                    <td>{{s.title}}</td>
-                                    <td>{{s.fname}}</td>
-                                    <td>{{s.lname}}</td>
-                                    <td>{{s.email}}</td>
-                                    <td>{{s.phone}}</td>
-                                    <td>
-                                        <v-btn @click="edit(s)"
-                                            class="bg-yellow-500 text-white hover:bg-yellow-600">EDIT</v-btn>
-                                        <v-btn @click="deleteData(s)"
-                                            class="bg-red-500 text-white hover:bg-red-600">DEL</v-btn>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </v-card-text>
-
-                    <v-card-actions>
-                        <v-btn @click="readData()" class="bg-green-500 text-white hover:bg-green-600">Read Data(get)</v-btn>
-                        <v-btn @click="autoRead()" class="bg-blue-500 text-white hover:bg-blue-600">Auto Read(onSnapshot)</v-btn>
-                        <v-btn @click="addData()" class="bg-yellow-500 text-white hover:bg-yellow-600">Add Data</v-btn>
-                    </v-card-actions>
                 </v-card>
-                <v-card v-if="editmode">
-                    <v-card-text class="pa-6">
-                        <v-card-title class="bg-blue-grey">{{editmode}}</v-card-title>
-                        <v-text-field v-model="editstd.id" label="รหัส"></v-text-field>
-                        <v-combobox v-model="editstd.title" label="คำนำหน้า" :items="['นาย','นางสาว','นาง']"></v-combobox>
-                        <v-text-field v-model="editstd.fname" label="ชื่อ"></v-text-field>
-                        <v-text-field v-model="editstd.lname" label="นามสกุล"></v-text-field>
-                        <v-text-field v-model="editstd.email" label="E-mail"></v-text-field>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-btn @click="savedata()">Save</v-btn>
-                        <v-btn @click="editmode=0">Cancel</v-btn>
-                    </v-card-actions>
-                </v-card>
-                <div class="pa-6 text-center">{{footer}}</div>
             </v-container>
         </v-app>
     </div>
 
 
+
+
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5-DOioROzlk-VGiyYFZJZhSWOs6MqOZ4",
+            authDomain: "std-checker-7ba2c.firebaseapp.com",
+            projectId: "std-checker-7ba2c",
+            storageBucket: "std-checker-7ba2c.appspot.com",
+            messagingSenderId: "484525243109",
+            appId: "1:484525243109:web:20bb92e9b34db14463b20c",
+            measurementId: "G-6R0X4WEPE7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         const vuetify = Vuetify.createVuetify();
         const app = Vue.createApp({
             data() {
                 return {
-                    Students: [],
+                    title: "STD Checker",
+                    students: [],
                     editstd: {},
                     editmode: 0,
                     user: null,
@@ -114,42 +81,6 @@
                 });
             },
             methods: {
-                readData() {
-                    db.collection("Students")
-                        .get()
-                        .then((querySnapshot) => {
-                            var stdlist = [];
-                            querySnapshot.forEach((doc) => {
-                                stdlist.push({ id: doc.id, ...doc.data() });
-                            });
-                            this.Students = stdlist;
-                        });
-                },
-                autoRead() {
-                    db.collection("Students").onSnapshot((querySnapshot) => {
-                        var stdlist = [];
-                        querySnapshot.forEach((doc) => {
-                            stdlist.push({ id: doc.id, ...doc.data() });
-                        });
-                        this.Students = stdlist;
-                    });
-                },
-                edit(std) {
-                    this.editstd = std;
-                    this.editmode = "edit";
-                },
-                savedata() {
-                    db.collection("Students").doc(this.editstd.id).set(this.editstd);
-                },
-                deleteData(std) {
-                    if (confirm("ต้องการลบข้อมูล")) {
-                        db.collection("Students").doc(std.id).delete();
-                    }
-                },
-                addData() {
-                    this.editmode = "เพิ่มนักเรียน";
-                    this.editstd = {};
-                },
                 google_login() {
                     // Using a popup.
                     var provider = new firebase.auth.GoogleAuthProvider();
